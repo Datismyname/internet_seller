@@ -215,7 +215,36 @@
     .modal .actions { display: flex; gap: 10px; margin-top: 20px; }
 
     @media (max-width: 480px) { .header h1 { font-size: 16px; } .content { padding: 10px 10px 90px; } }
-  </style>
+      /* Install Prompt */
+    .install-prompt {
+      background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+      color: white; border-radius: 16px; padding: 20px;
+      margin-bottom: 20px; text-align: center;
+      box-shadow: 0 8px 24px rgba(0,184,148,0.25);
+      animation: slideDown 0.4s ease-out;
+    }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    .install-prompt h3 { font-size: 16px; margin-bottom: 6px; }
+    .install-prompt p { font-size: 12px; opacity: 0.9; margin-bottom: 14px; }
+    .install-prompt .btn-install {
+      background: white; color: #00b894; border: none;
+      padding: 12px 28px; border-radius: 12px; font-size: 14px;
+      font-weight: 700; cursor: pointer; width: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .install-prompt .btn-install:active { transform: scale(0.97); }
+    .install-prompt .btn-later {
+      background: transparent; color: white; border: 1px solid rgba(255,255,255,0.4);
+      padding: 10px 20px; border-radius: 10px; font-size: 12px;
+      margin-top: 10px; cursor: pointer; width: auto;
+    }
+    .ios-steps {
+      background: rgba(255,255,255,0.15); border-radius: 12px;
+      padding: 14px; margin-top: 12px; font-size: 12px; text-align: right;
+      line-height: 1.8;
+    }
+    .ios-steps strong { display: block; margin-bottom: 6px; font-size: 13px; }
+</style>
 </head>
 <body>
   <div class="app" id="app">
@@ -225,6 +254,20 @@
         <div class="logo">📶</div>
         <h2>بائع الباقات</h2>
         <p>تسجيل الدخول للمتابعة</p>
+
+        <!-- Install Prompt -->
+        <div class="install-prompt" id="installPrompt" style="display:none;">
+          <h3>📲 ثبّت التطبيق</h3>
+          <p>للوصول السريع بدون فتح المتصفح</p>
+          <button class="btn-install" id="btnInstall" onclick="installApp()">⬇️ تثبيت الآن</button>
+          <div class="ios-steps" id="iosSteps" style="display:none;">
+            <strong>📱 على الآيفون:</strong>
+            1. اضغط زر المشاركة (⬆️)<br>
+            2. اختر "Add to Home Screen"<br>
+            3. اضغط "Add"
+          </div>
+          <button class="btn-later" onclick="dismissInstall()">لاحقاً</button>
+        </div>
         <div class="form-group">
           <label>اسم المستخدم</label>
           <input type="text" id="loginUser" placeholder="مثال: admin" autocomplete="username">
@@ -990,10 +1033,56 @@
     }
 
     // ═══════════════════════════════════════════════════════════
+    // INSTALL PROMPT
+    // ═══════════════════════════════════════════════════════════
+    let deferredPrompt;
+    let installDismissed = localStorage.getItem('netSeller_installDismissed') === '1';
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    function showInstallPrompt() {
+      if (isStandalone || installDismissed) return;
+      const prompt = document.getElementById('installPrompt');
+      if (!prompt) return;
+      prompt.style.display = 'block';
+      if (isIOS) {
+        document.getElementById('btnInstall').style.display = 'none';
+        document.getElementById('iosSteps').style.display = 'block';
+      }
+    }
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choice) => {
+          if (choice.outcome === 'accepted') {
+            showToast('✅ تم تثبيت التطبيق');
+            document.getElementById('installPrompt').style.display = 'none';
+          }
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    function dismissInstall() {
+      installDismissed = true;
+      localStorage.setItem('netSeller_installDismissed', '1');
+      document.getElementById('installPrompt').style.display = 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showInstallPrompt();
+    });
+
+    // ═══════════════════════════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════════════════════════
     document.getElementById('cStartDate').value = new Date().toISOString().split('T')[0];
     checkAuth();
+    // Show install prompt after a short delay if not installed
+    setTimeout(showInstallPrompt, 1500);
   </script>
 </body>
 </html>
