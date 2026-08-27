@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0984e3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="بائع الباقات">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>بائع الباقات</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-192x192.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --primary: #0984e3; --primary-light: #74b9ff; --danger: #d63031;
+      --success: #00b894; --warning: #fdcb6e; --bg: #f0f2f5;
+      --card: #ffffff; --text: #2d3436; --text-light: #636e72;
+    }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; min-height: 100dvh;
+      overscroll-behavior: none;
+    }
+    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
+
+    /* Login Screen */
+    .login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    }
+    .login-box {
+      background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15); text-align: center;
+    }
+    .login-box .logo { font-size: 48px; margin-bottom: 8px; }
+    .login-box h2 { font-size: 22px; margin-bottom: 4px; }
+    .login-box p { font-size: 13px; color: #888; margin-bottom: 24px; }
+    .login-box .form-group { margin-bottom: 16px; text-align: right; }
+    .login-box .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; }
+    .login-box .form-group input {
+      width: 100%; padding: 14px; border: 2px solid #e8e8e8; border-radius: 12px;
+      font-size: 16px; text-align: center; background: #fafafa; transition: all 0.2s;
+      -webkit-appearance: none; font-family: inherit;
+    }
+    .login-box .form-group input:focus { outline: none; border-color: var(--primary); background: #fff; }
+    .login-box .btn { margin-top: 8px; }
+    .login-error { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 18px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white; padding: 14px 18px 22px; text-align: center;
+      border-radius: 0 0 24px 24px; box-shadow: 0 4px 20px rgba(9,132,227,0.25);
+      position: relative;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header p { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+    .user-badge {
+      position: absolute; top: 12px; left: 14px;
+      font-size: 10px; padding: 4px 10px; border-radius: 20px;
+      background: rgba(255,255,255,0.2); color: white; font-weight: 600;
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+    }
+    .sync-badge {
+      position: absolute; top: 12px; right: 14px;
+      font-size: 10px; padding: 3px 10px; border-radius: 20px;
+      background: rgba(255,255,255,0.2); color: white; font-weight: 600;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .sync-badge.online { background: rgba(0,184,148,0.3); }
+    .sync-badge.offline { background: rgba(214,48,49,0.3); }
+    .sync-badge.syncing { background: rgba(253,203,110,0.4); color: #2d3436; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; display: flex; justify-content: space-around;
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.08); z-index: 100; max-width: 480px; margin: 0 auto;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 3px; padding: 6px; border: none; background: none;
+      color: var(--text-light); font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; -webkit-appearance: none;
+    }
+    .nav-btn .icon { font-size: 20px; }
+    .nav-btn.active { color: var(--primary); }
+    .nav-btn:active { transform: scale(0.95); }
+
+    /* Content */
+    .content { padding: 14px 14px 90px; }
+    .screen { display: none; animation: fadeIn 0.25s ease-out; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Cards */
+    .card {
+      background: var(--card); border-radius: 16px; padding: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 12px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    /* Form */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 14px; border: 2px solid #e8e8e8; border-radius: 12px;
+      font-size: 15px; color: var(--text); background: #fafafa;
+      transition: all 0.2s; -webkit-appearance: none; font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary); background: #fff;
+      box-shadow: 0 0 0 3px rgba(9,132,227,0.08);
+    }
+    .form-group textarea { min-height: 70px; resize: vertical; }
+
+    /* Star Rating */
+    .stars { display: flex; gap: 6px; direction: ltr; justify-content: flex-end; }
+    .star { font-size: 26px; cursor: pointer; color: #dfe6e9; transition: all 0.15s; user-select: none; }
+    .star.active { color: #fdcb6e; text-shadow: 0 0 8px rgba(253,203,110,0.4); }
+    .star:active { transform: scale(1.2); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 12px 20px; border: none; border-radius: 12px; font-size: 14px;
+      font-weight: 700; cursor: pointer; transition: all 0.2s; width: 100%;
+      -webkit-appearance: none; font-family: inherit;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; box-shadow: 0 4px 14px rgba(9,132,227,0.3); }
+    .btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 8px rgba(9,132,227,0.2); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-outline { background: transparent; border: 2px solid #e8e8e8; color: var(--text-light); }
+    .btn-sm { padding: 8px 12px; font-size: 12px; width: auto; }
+
+    /* Filter Tabs */
+    .filter-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .filter-tab {
+      flex: 1; padding: 10px; border: 2px solid #e8e8e8; border-radius: 12px;
+      background: white; font-size: 13px; font-weight: 600; cursor: pointer;
+      text-align: center; color: var(--text-light); transition: all 0.2s;
+      -webkit-appearance: none;
+    }
+    .filter-tab.active { border-color: var(--primary); color: var(--primary); background: #f0f7ff; }
+    .filter-tab:active { transform: scale(0.97); }
+
+    /* GPS Status */
+    .gps-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-light); margin-bottom: 14px; padding: 10px 14px; background: #f8f9fa; border-radius: 10px; }
+    .gps-status.ok { color: var(--success); background: #e8f8f5; }
+    .gps-status.err { color: var(--danger); background: #ffeaea; }
+
+    /* Search */
+    .search-box { position: relative; margin-bottom: 12px; }
+    .search-box input { width: 100%; padding: 12px 14px 12px 40px; border: 2px solid #e8e8e8; border-radius: 12px; font-size: 14px; background: #fafafa; }
+    .search-box input:focus { outline: none; border-color: var(--primary); background: #fff; }
+    .search-box .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #b2bec3; }
+
+    /* Customer Card */
+    .customer-card {
+      background: var(--card); border-radius: 16px; padding: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 10px;
+      border-right: 4px solid var(--primary); position: relative;
+    }
+    .customer-card.expiring-soon { border-right-color: var(--danger); }
+    .customer-card.expiring-warning { border-right-color: var(--warning); }
+    .customer-card .name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .customer-card .phone { font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px; display: inline-block; }
+    .customer-card .seller-tag {
+      font-size: 10px; padding: 2px 8px; border-radius: 10px;
+      background: #e8e8e8; color: var(--text-light); font-weight: 600; margin-right: 6px;
+    }
+    .customer-card .meta { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+    .customer-card .badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+      background: #f0f2f5; color: var(--text-light);
+    }
+    .customer-card .badge.company-stc { background: #e8f4fd; color: #0984e3; }
+    .customer-card .badge.company-mobily { background: #e8f8e8; color: #00b894; }
+    .customer-card .badge.company-zain { background: #fff3e8; color: #e17055; }
+    .customer-card .badge.company-virgin { background: #f3e8ff; color: #6c5ce7; }
+    .customer-card .badge.company-salam { background: #e8f0ff; color: #0984e3; }
+    .customer-card .badge.days-left { background: #ffeaea; color: var(--danger); }
+    .customer-card .badge.days-ok { background: #e8f8f5; color: var(--success); }
+    .customer-card .badge.days-warning { background: #fff8e1; color: #f39c12; }
+    .customer-card .notes { font-size: 12px; color: var(--text-light); margin-top: 4px; line-height: 1.5; }
+    .customer-card .actions { display: flex; gap: 6px; margin-top: 10px; }
+    .customer-card .rating { font-size: 14px; letter-spacing: 1px; }
+
+    /* Stats Bar */
+    .stats-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+    .stat-pill {
+      flex: 1; background: var(--card); border-radius: 12px; padding: 10px;
+      text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .stat-pill .num { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .stat-pill .label { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+
+    /* Empty State */
+    .empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty p { font-size: 14px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+      background: #2d3436; color: white; padding: 12px 24px; border-radius: 12px;
+      font-size: 13px; font-weight: 600; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; align-items: center; justify-content: center; z-index: 150;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white; border-radius: 20px; padding: 24px; width: 100%; max-width: 400px;
+      max-height: 90vh; overflow-y: auto; animation: modalIn 0.2s ease-out;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal h3 { font-size: 17px; margin-bottom: 16px; }
+    .modal .actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* API Config */
+    .api-config { background: #fff8e1; border: 1px solid #ffeaa7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .api-config label { font-size: 12px; font-weight: 600; color: #856404; display: block; margin-bottom: 6px; }
+    .api-config input { width: 100%; padding: 10px 12px; border: 2px solid #ffeaa7; border-radius: 10px; font-size: 12px; }
+    .api-config input:focus { outline: none; border-color: #fdcb6e; }
+
+    @media (max-width: 480px) { .header h1 { font-size: 16px; } .content { padding: 10px 10px 90px; } }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="loginScreen">
+      <div class="login-box">
+        <div class="logo">📶</div>
+        <h2>بائع الباقات</h2>
+        <p>تسجيل الدخول للمتابعة</p>
+        <div class="api-config" style="margin-bottom:16px;text-align:right;">
+          <label>🔗 رابط Google Sheets API</label>
+          <input type="text" id="loginApiUrl" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveApiUrl()">
+        </div>
+        <div class="form-group">
+          <label>اسم المستخدم</label>
+          <input type="text" id="loginUser" placeholder="مثال: admin" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label>كلمة المرور</label>
+          <input type="password" id="loginPass" placeholder="••••••" autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" onclick="doLogin()">🔐 تسجيل الدخول</button>
+        <div class="login-error" id="loginError"></div>
+      </div>
+    </div>
+
+    <!-- MAIN APP (hidden until login) -->
+    <div id="mainApp" style="display:none;">
+      <!-- Header -->
+      <div class="header">
+        <div class="user-badge" onclick="logout()">
+          <span>👤</span>
+          <span id="userName">البائع</span>
+        </div>
+        <div class="sync-badge offline" id="syncBadge">
+          <span id="syncIcon">📴</span>
+          <span id="syncText">غير متصل</span>
+        </div>
+        <h1>📶 بائع الباقات</h1>
+        <p id="userRole">بائع متجول</p>
+      </div>
+
+      <!-- Content Screens -->
+      <div class="content">
+        <!-- Screen 1: Add Customer -->
+        <div id="screen-add" class="screen active">
+          <div class="card">
+            <div class="card-title">📝 تسجيل عميل جديد</div>
+            <form id="customerForm" onsubmit="event.preventDefault(); saveCustomer();">
+              <div class="form-group">
+                <label>اسم العميل *</label>
+                <input type="text" id="cName" placeholder="مثال: محمد عبدالله" required>
+              </div>
+              <div class="form-group">
+                <label>رقم الجوال *</label>
+                <input type="tel" id="cPhone" placeholder="مثال: 0501234567" required inputmode="tel">
+              </div>
+              <div class="form-group">
+                <label>الشركة *</label>
+                <select id="cCompany" required>
+                  <option value="">اختر الشركة</option>
+                  <option value="STC">STC</option>
+                  <option value="Mobily">Mobily</option>
+                  <option value="Zain">Zain</option>
+                  <option value="Virgin">Virgin</option>
+                  <option value="Salam">Salam</option>
+                  <option value="أخرى">أخرى</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>الباقة *</label>
+                <input type="text" id="cPackage" placeholder="مثال: باقة 100 جيجا" required>
+              </div>
+              <div class="form-group">
+                <label>مدة الباقة (بالأيام) *</label>
+                <input type="number" id="cDuration" placeholder="مثال: 30" required inputmode="numeric">
+              </div>
+              <div class="form-group">
+                <label>تاريخ البدء</label>
+                <input type="date" id="cStartDate">
+              </div>
+              <div class="form-group">
+                <label>الموقع الجغرافي</label>
+                <div class="gps-status" id="gpsStatus">
+                  <span>📍</span>
+                  <span>لم يتم تحديد الموقع بعد</span>
+                </div>
+                <button type="button" class="btn btn-outline" onclick="getLocation()">
+                  📍 جلب موقعي الحالي
+                </button>
+                <input type="hidden" id="cLat">
+                <input type="hidden" id="cLng">
+              </div>
+              <div class="form-group">
+                <label>ملاحظات</label>
+                <textarea id="cNotes" placeholder="أي ملاحظات عن العميل..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>تقييم العميل</label>
+                <div class="stars" id="starContainer">
+                  <span class="star" data-val="1" onclick="setRating(1)">★</span>
+                  <span class="star" data-val="2" onclick="setRating(2)">★</span>
+                  <span class="star" data-val="3" onclick="setRating(3)">★</span>
+                  <span class="star" data-val="4" onclick="setRating(4)">★</span>
+                  <span class="star" data-val="5" onclick="setRating(5)">★</span>
+                </div>
+                <input type="hidden" id="cRating" value="0">
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top:8px;">
+                💾 حفظ العميل
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Screen 2: Customer List -->
+        <div id="screen-list" class="screen">
+          <div class="stats-bar">
+            <div class="stat-pill"><div class="num" id="statTotal">0</div><div class="label">العملاء</div></div>
+            <div class="stat-pill"><div class="num" id="statExpiring">0</div><div class="label">تنتهي قريباً</div></div>
+            <div class="stat-pill"><div class="num" id="statToday">0</div><div class="label">تنتهي اليوم</div></div>
+          </div>
+          <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" onclick="setFilter('mine')">👤 عملائي</button>
+            <button class="filter-tab" onclick="setFilter('all')">👥 كل العملاء</button>
+          </div>
+          <div class="search-box">
+            <span class="icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم، الجوال، الشركة..." oninput="renderList()">
+          </div>
+          <div id="customerList"></div>
+        </div>
+
+        <!-- Screen 3: Reminders -->
+        <div id="screen-reminders" class="screen">
+          <div class="card">
+            <div class="card-title">⏰ تذكيرات التجديد</div>
+            <p style="font-size:12px;color:var(--text-light);margin-bottom:12px;">العملاء الذين تنتهي باقاتهم خلال 5 أيام أو أقل</p>
+          </div>
+          <div id="reminderList"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <button class="nav-btn active" onclick="switchScreen('add')">
+          <span class="icon">➕</span>
+          <span>تسجيل</span>
+        </button>
+        <button class="nav-btn" onclick="switchScreen('list')">
+          <span class="icon">👥</span>
+          <span>العملاء</span>
+        </button>
+        <button class="nav-btn" onclick="switchScreen('reminders')">
+          <span class="icon">⏰</span>
+          <span>تذكيرات</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal">
+        <h3>✏️ تعديل بيانات العميل</h3>
+        <form id="editForm" onsubmit="event.preventDefault(); updateCustomer();">
+          <input type="hidden" id="eId">
+          <div class="form-group">
+            <label>الاسم</label>
+            <input type="text" id="eName" required>
+          </div>
+          <div class="form-group">
+            <label>الجوال</label>
+            <input type="tel" id="ePhone" required>
+          </div>
+          <div class="form-group">
+            <label>الشركة</label>
+            <select id="eCompany" required>
+              <option value="STC">STC</option>
+              <option value="Mobily">Mobily</option>
+              <option value="Zain">Zain</option>
+              <option value="Virgin">Virgin</option>
+              <option value="Salam">Salam</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>الباقة</label>
+            <input type="text" id="ePackage" required>
+          </div>
+          <div class="form-group">
+            <label>مدة الباقة (أيام)</label>
+            <input type="number" id="eDuration" required>
+          </div>
+          <div class="form-group">
+            <label>تاريخ البدء</label>
+            <input type="date" id="eStartDate">
+          </div>
+          <div class="form-group">
+            <label>ملاحظات</label>
+            <textarea id="eNotes"></textarea>
+          </div>
+          <div class="form-group">
+            <label>التقييم</label>
+            <div class="stars" id="eStarContainer">
+              <span class="star" data-val="1" onclick="setEditRating(1)">★</span>
+              <span class="star" data-val="2" onclick="setEditRating(2)">★</span>
+              <span class="star" data-val="3" onclick="setEditRating(3)">★</span>
+              <span class="star" data-val="4" onclick="setEditRating(4)">★</span>
+              <span class="star" data-val="5" onclick="setEditRating(5)">★</span>
+            </div>
+            <input type="hidden" id="eRating" value="0">
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-outline" onclick="closeModal()">إلغاء</button>
+            <button type="submit" class="btn btn-success">حفظ التعديلات</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════
+    // CONFIG
+    // ═══════════════════════════════════════════════════════════
+    const STORAGE_KEY = 'netSeller_customers';
+    const API_URL_KEY = 'netSeller_apiUrl';
+    const USER_KEY = 'netSeller_user';
+    let customers = [];
+    let currentRating = 0;
+    let editRating = 0;
+    let isOnline = navigator.onLine;
+    let isSyncing = false;
+    let currentUser = null;
+    let listFilter = 'mine'; // 'mine' or 'all'
+
+    // ═══════════════════════════════════════════════════════════
+    // API URL
+    // ═══════════════════════════════════════════════════════════
+    function getApiUrl() { return localStorage.getItem(API_URL_KEY) || ''; }
+    function saveApiUrl() {
+      const url = (document.getElementById('loginApiUrl') || document.getElementById('apiUrlInput')).value.trim();
+      if (url) localStorage.setItem(API_URL_KEY, url);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // AUTH
+    // ═══════════════════════════════════════════════════════════
+    function checkAuth() {
+      const saved = localStorage.getItem(USER_KEY);
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        showMainApp();
+      } else {
+        showLoginScreen();
+      }
+    }
+
+    function showLoginScreen() {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('mainApp').style.display = 'none';
+      const savedUrl = getApiUrl();
+      if (savedUrl) document.getElementById('loginApiUrl').value = savedUrl;
+    }
+
+    function showMainApp() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('userName').textContent = currentUser.name || currentUser.username;
+      document.getElementById('userRole').textContent = currentUser.role === 'admin' ? 'مدير النظام' : 'بائع متجول';
+      // Admin sees all filter, seller sees only mine
+      if (currentUser.role !== 'admin') {
+        document.getElementById('filterTabs').style.display = 'none';
+        listFilter = 'mine';
+      }
+      loadLocal();
+      updateSyncBadge();
+      renderList();
+      updateStats();
+      renderReminders();
+      if (isOnline && getApiUrl()) syncFromSheets();
+    }
+
+    async function doLogin() {
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value;
+      const url = getApiUrl();
+      const errEl = document.getElementById('loginError');
+
+      if (!url) { errEl.textContent = '⚠️ أدخل رابط API أولاً'; return; }
+      if (!username || !password) { errEl.textContent = '⚠️ أدخل اسم المستخدم وكلمة المرور'; return; }
+
+      errEl.textContent = '⏳ جاري تسجيل الدخول...';
+      try {
+        const res = await fetch(url + '?action=login&username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password));
+        const data = await res.json();
+        if (data.success) {
+          currentUser = data.user;
+          localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+          errEl.textContent = '';
+          showMainApp();
+          showToast('✅ مرحباً ' + currentUser.name);
+        } else {
+          errEl.textContent = '❌ ' + (data.error || 'بيانات غير صحيحة');
+        }
+      } catch (e) {
+        errEl.textContent = '❌ تعذر الاتصال بالخادم';
+      }
+    }
+
+    function logout() {
+      if (!confirm('هل تريد تسجيل الخروج؟')) return;
+      localStorage.removeItem(USER_KEY);
+      currentUser = null;
+      showLoginScreen();
+      showToast('👋 تم تسجيل الخروج');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SYNC BADGE
+    // ═══════════════════════════════════════════════════════════
+    function updateSyncBadge() {
+      const badge = document.getElementById('syncBadge');
+      const icon = document.getElementById('syncIcon');
+      const text = document.getElementById('syncText');
+      badge.className = 'sync-badge';
+      if (isSyncing) { badge.classList.add('syncing'); icon.textContent = '🔄'; text.textContent = 'جاري المزامنة'; }
+      else if (isOnline) { badge.classList.add('online'); icon.textContent = '🌐'; text.textContent = 'متصل'; }
+      else { badge.classList.add('offline'); icon.textContent = '📴'; text.textContent = 'غير متصل'; }
+    }
+    window.addEventListener('online', () => { isOnline = true; updateSyncBadge(); syncFromSheets(); });
+    window.addEventListener('offline', () => { isOnline = false; updateSyncBadge(); });
+
+    // ═══════════════════════════════════════════════════════════
+    // API
+    // ═══════════════════════════════════════════════════════════
+    async function apiRequest(action, data) {
+      const url = getApiUrl();
+      if (!url) return { success: false, error: 'No API URL' };
+      try {
+        const response = await fetch(url + '?action=' + action, {
+          method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }
+        });
+        return await response.json();
+      } catch (e) { return { success: false, error: e.message }; }
+    }
+
+    async function syncFromSheets() {
+      const url = getApiUrl();
+      if (!url || !isOnline || !currentUser) return;
+      isSyncing = true; updateSyncBadge();
+      try {
+        const endpoint = (currentUser.role === 'admin' || listFilter === 'all')
+          ? url + '?action=getAll'
+          : url + '?action=getBySeller&sellerId=' + encodeURIComponent(currentUser.id);
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        if (data.success && data.data) {
+          customers = data.data;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
+          renderList(); updateStats(); renderReminders();
+        }
+      } catch (e) { console.log('Sync failed:', e); }
+      isSyncing = false; updateSyncBadge();
+    }
+
+    async function addToSheets(customer) {
+      if (!isOnline) return false;
+      isSyncing = true; updateSyncBadge();
+      const res = await apiRequest('add', customer);
+      isSyncing = false; updateSyncBadge();
+      return res.success;
+    }
+    async function updateInSheets(customer) {
+      if (!isOnline) return false;
+      isSyncing = true; updateSyncBadge();
+      const res = await apiRequest('update', customer);
+      isSyncing = false; updateSyncBadge();
+      return res.success;
+    }
+    async function deleteFromSheets(id) {
+      if (!isOnline) return false;
+      isSyncing = true; updateSyncBadge();
+      const res = await apiRequest('delete', { id: id });
+      isSyncing = false; updateSyncBadge();
+      return res.success;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // LOCAL DATA
+    // ═══════════════════════════════════════════════════════════
+    function loadLocal() {
+      try { const data = localStorage.getItem(STORAGE_KEY); if (data) customers = JSON.parse(data); }
+      catch(e) { customers = []; }
+    }
+    function saveLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(customers)); }
+    function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+
+    // ═══════════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════════
+    function switchScreen(screen) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('screen-' + screen).classList.add('active');
+      const idx = ['add','list','reminders'].indexOf(screen);
+      document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+      if (screen === 'list') { renderList(); updateStats(); }
+      if (screen === 'reminders') { renderReminders(); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FILTER
+    // ═══════════════════════════════════════════════════════════
+    function setFilter(filter) {
+      listFilter = filter;
+      document.querySelectorAll('.filter-tab').forEach((t, i) => {
+        t.classList.toggle('active', (filter === 'mine' && i === 0) || (filter === 'all' && i === 1));
+      });
+      renderList();
+      updateStats();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // RATING
+    // ═══════════════════════════════════════════════════════════
+    function setRating(n) {
+      currentRating = n; document.getElementById('cRating').value = n;
+      document.querySelectorAll('#starContainer .star').forEach((s, i) => s.classList.toggle('active', i < n));
+    }
+    function setEditRating(n) {
+      editRating = n; document.getElementById('eRating').value = n;
+      document.querySelectorAll('#eStarContainer .star').forEach((s, i) => s.classList.toggle('active', i < n));
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // GPS
+    // ═══════════════════════════════════════════════════════════
+    function getLocation() {
+      const status = document.getElementById('gpsStatus');
+      status.className = 'gps-status'; status.innerHTML = '<span>⏳</span><span>جاري تحديد الموقع...</span>';
+      if (!navigator.geolocation) { status.className = 'gps-status err'; status.innerHTML = '<span>❌</span><span>المتصفح لا يدعم تحديد الموقع</span>'; return; }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('cLat').value = pos.coords.latitude;
+          document.getElementById('cLng').value = pos.coords.longitude;
+          status.className = 'gps-status ok'; status.innerHTML = '<span>✅</span><span>تم تحديد الموقع</span>';
+          showToast('✅ تم تحديد الموقع');
+        },
+        (err) => {
+          status.className = 'gps-status err';
+          let msg = 'تعذر تحديد الموقع';
+          if (err.code === 1) msg = 'تم رفض الإذن - فعّل GPS';
+          if (err.code === 2) msg = 'لم يتم العثور على الموقع';
+          if (err.code === 3) msg = 'انتهى الوقت';
+          status.innerHTML = '<span>❌</span><span>' + msg + '</span>'; showToast('❌ ' + msg);
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SAVE CUSTOMER
+    // ═══════════════════════════════════════════════════════════
+    async function saveCustomer() {
+      const name = document.getElementById('cName').value.trim();
+      const phone = document.getElementById('cPhone').value.trim();
+      const company = document.getElementById('cCompany').value;
+      const pkg = document.getElementById('cPackage').value.trim();
+      const duration = parseInt(document.getElementById('cDuration').value) || 0;
+      const startDate = document.getElementById('cStartDate').value || new Date().toISOString().split('T')[0];
+      const notes = document.getElementById('cNotes').value.trim();
+      const rating = parseInt(document.getElementById('cRating').value) || 0;
+      const lat = document.getElementById('cLat').value;
+      const lng = document.getElementById('cLng').value;
+
+      if (!name || !phone || !company || !pkg || duration <= 0) { showToast('⚠️ يرجى ملء جميع الحقول المطلوبة'); return; }
+
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setDate(end.getDate() + duration);
+
+      const customer = {
+        id: generateId(), name, phone, company,
+        package: pkg, duration, startDate,
+        endDate: end.toISOString().split('T')[0],
+        notes, rating,
+        lat: lat || '', lng: lng || '',
+        sellerId: currentUser ? currentUser.id : '',
+        sellerName: currentUser ? currentUser.name : '',
+        createdAt: new Date().toISOString()
+      };
+
+      customers.unshift(customer);
+      saveLocal();
+
+      if (isOnline && getApiUrl()) {
+        const synced = await addToSheets(customer);
+        if (synced) showToast('✅ تم الحفظ والمزامنة');
+        else showToast('⚠️ تم الحفظ محلياً فقط');
+      } else {
+        showToast('✅ تم الحفظ محلياً - سيتم المزامنة عند الاتصال');
+      }
+
+      document.getElementById('customerForm').reset();
+      document.getElementById('cStartDate').value = new Date().toISOString().split('T')[0];
+      setRating(0);
+      document.getElementById('gpsStatus').className = 'gps-status';
+      document.getElementById('gpsStatus').innerHTML = '<span>📍</span><span>لم يتم تحديد الموقع بعد</span>';
+      document.getElementById('cLat').value = ''; document.getElementById('cLng').value = '';
+      setTimeout(() => switchScreen('list'), 800);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // DATE HELPERS
+    // ═══════════════════════════════════════════════════════════
+    function daysLeft(endDateStr) {
+      const end = new Date(endDateStr + 'T00:00:00');
+      const now = new Date(); now.setHours(0,0,0,0);
+      return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    }
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr + 'T00:00:00').toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric' });
+    }
+    function starsHtml(rating) {
+      let s = '';
+      for (let i = 1; i <= 5; i++) s += '<span style="color:' + (i <= rating ? '#fdcb6e' : '#dfe6e9') + '">★</span>';
+      return s;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // RENDER LIST
+    // ═══════════════════════════════════════════════════════════
+    function renderList() {
+      const container = document.getElementById('customerList');
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      let list = customers;
+      // Filter by seller if not admin and filter is 'mine'
+      if (currentUser && currentUser.role !== 'admin' && listFilter === 'mine') {
+        list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
+      }
+
+      if (query) {
+        list = list.filter(c =>
+          (c.name && c.name.toLowerCase().includes(query)) ||
+          (c.phone && c.phone.includes(query)) ||
+          (c.company && c.company.toLowerCase().includes(query)) ||
+          (c.package && c.package.toLowerCase().includes(query))
+        );
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = '<div class="empty"><div class="icon">📭</div><p>لا يوجد عملاء مسجلين</p></div>';
+        return;
+      }
+
+      container.innerHTML = list.map(c => {
+        const dl = daysLeft(c.endDate);
+        let borderClass = '';
+        let daysBadge = '';
+        if (dl <= 0) { borderClass = 'expiring-soon'; daysBadge = '<span class="badge days-left">منتهية</span>'; }
+        else if (dl <= 5) { borderClass = 'expiring-soon'; daysBadge = '<span class="badge days-left">' + dl + ' يوم</span>'; }
+        else if (dl <= 10) { borderClass = 'expiring-warning'; daysBadge = '<span class="badge days-warning">' + dl + ' يوم</span>'; }
+        else { daysBadge = '<span class="badge days-ok">' + dl + ' يوم</span>'; }
+        const companyClass = 'company-' + (c.company || '').toLowerCase();
+        const cleanPhone = c.phone ? c.phone.replace(/\s/g,'').replace(/-/g,'') : '';
+        const waPhone = cleanPhone.startsWith('0') ? '966' + cleanPhone.substring(1) : cleanPhone;
+        const sellerTag = c.sellerName ? '<span class="seller-tag">👤 ' + escapeHtml(c.sellerName) + '</span>' : '';
+
+        return `<div class="customer-card ${borderClass}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="name">${escapeHtml(c.name)} ${sellerTag}</div>
+              <span class="phone">📞 ${escapeHtml(c.phone)}</span>
+            </div>
+            <div class="rating">${starsHtml(parseInt(c.rating)||0)}</div>
+          </div>
+          <div class="meta">
+            <span class="badge ${companyClass}">${escapeHtml(c.company || '')}</span>
+            <span class="badge">${escapeHtml(c.package || '')}</span>
+            ${daysBadge}
+          </div>
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:4px;">
+            📅 ${formatDate(c.startDate)} → ${formatDate(c.endDate)}
+          </div>
+          ${c.notes ? `<div class="notes">📝 ${escapeHtml(c.notes)}</div>` : ''}
+          <div class="actions">
+            <a href="tel:${cleanPhone}" class="btn btn-sm btn-success" style="text-decoration:none;flex:1;">📞</a>
+            <a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-sm" style="text-decoration:none;flex:1;background:#25d366;color:white;">💬</a>
+            ${c.lat && c.lng ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}" target="_blank" class="btn btn-sm btn-primary" style="text-decoration:none;flex:1;">🗺️</a>` : ''}
+            ${canEdit(c) ? `<button class="btn btn-sm btn-outline" onclick="openEdit('${c.id}')" style="flex:1;">✏️</button>` : ''}
+            ${canEdit(c) ? `<button class="btn btn-sm btn-danger" onclick="deleteCustomer('${c.id}')" style="flex:1;">🗑️</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function canEdit(c) {
+      if (!currentUser) return false;
+      if (currentUser.role === 'admin') return true;
+      return String(c.sellerId || '') === String(currentUser.id);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // RENDER REMINDERS
+    // ═══════════════════════════════════════════════════════════
+    function renderReminders() {
+      const container = document.getElementById('reminderList');
+      let list = customers.filter(c => daysLeft(c.endDate) <= 5).sort((a, b) => daysLeft(a.endDate) - daysLeft(b.endDate));
+      // Filter by seller if not admin
+      if (currentUser && currentUser.role !== 'admin') {
+        list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
+      }
+      if (list.length === 0) {
+        container.innerHTML = '<div class="empty"><div class="icon">🎉</div><p>لا توجد باقات تنتهي قريباً!</p></div>';
+        return;
+      }
+      container.innerHTML = list.map(c => {
+        const dl = daysLeft(c.endDate);
+        let statusText = dl <= 0 ? '⛔ انتهت!' : '⏰ تنتهي خلال ' + dl + ' يوم';
+        let urgency = dl <= 0 ? 'expiring-soon' : (dl <= 2 ? 'expiring-soon' : 'expiring-warning');
+        const companyClass = 'company-' + (c.company || '').toLowerCase();
+        const cleanPhone = c.phone ? c.phone.replace(/\s/g,'').replace(/-/g,'') : '';
+        const waPhone = cleanPhone.startsWith('0') ? '966' + cleanPhone.substring(1) : cleanPhone;
+        const sellerTag = c.sellerName ? '<span class="seller-tag">👤 ' + escapeHtml(c.sellerName) + '</span>' : '';
+
+        return `<div class="customer-card ${urgency}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="name">${escapeHtml(c.name)} ${sellerTag}</div>
+              <span class="phone">📞 ${escapeHtml(c.phone)}</span>
+            </div>
+            <div style="font-size:12px;font-weight:700;color:var(--danger);">${statusText}</div>
+          </div>
+          <div class="meta">
+            <span class="badge ${companyClass}">${escapeHtml(c.company || '')}</span>
+            <span class="badge">${escapeHtml(c.package || '')}</span>
+            <span class="badge">ينتهي: ${formatDate(c.endDate)}</span>
+          </div>
+          ${c.notes ? `<div class="notes">📝 ${escapeHtml(c.notes)}</div>` : ''}
+          <div class="actions">
+            <a href="tel:${cleanPhone}" class="btn btn-sm btn-success" style="text-decoration:none;flex:1;">📞 اتصال</a>
+            <a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-sm" style="text-decoration:none;flex:1;background:#25d366;color:white;">💬 واتساب</a>
+            ${c.lat && c.lng ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}" target="_blank" class="btn btn-sm btn-primary" style="text-decoration:none;flex:1;">🗺️ الاتجاهات</a>` : ''}
+            ${canEdit(c) ? `<button class="btn btn-sm btn-outline" onclick="openEdit('${c.id}')" style="flex:1;">✏️</button>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // STATS
+    // ═══════════════════════════════════════════════════════════
+    function updateStats() {
+      let list = customers;
+      if (currentUser && currentUser.role !== 'admin' && listFilter === 'mine') {
+        list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
+      }
+      document.getElementById('statTotal').textContent = list.length;
+      document.getElementById('statExpiring').textContent = list.filter(c => daysLeft(c.endDate) <= 5 && daysLeft(c.endDate) > 0).length;
+      document.getElementById('statToday').textContent = list.filter(c => daysLeft(c.endDate) === 0).length;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // EDIT / DELETE
+    // ═══════════════════════════════════════════════════════════
+    function openEdit(id) {
+      const c = customers.find(x => x.id === id);
+      if (!c || !canEdit(c)) return;
+      document.getElementById('eId').value = c.id;
+      document.getElementById('eName').value = c.name;
+      document.getElementById('ePhone').value = c.phone;
+      document.getElementById('eCompany').value = c.company;
+      document.getElementById('ePackage').value = c.package || '';
+      document.getElementById('eDuration').value = c.duration;
+      document.getElementById('eStartDate').value = c.startDate;
+      document.getElementById('eNotes').value = c.notes || '';
+      editRating = parseInt(c.rating) || 0;
+      document.getElementById('eRating').value = editRating;
+      document.querySelectorAll('#eStarContainer .star').forEach((s, i) => s.classList.toggle('active', i < editRating));
+      document.getElementById('editModal').classList.add('active');
+    }
+    function closeModal() { document.getElementById('editModal').classList.remove('active'); }
+
+    async function updateCustomer() {
+      const id = document.getElementById('eId').value;
+      const c = customers.find(x => x.id === id);
+      if (!c || !canEdit(c)) return;
+      c.name = document.getElementById('eName').value.trim();
+      c.phone = document.getElementById('ePhone').value.trim();
+      c.company = document.getElementById('eCompany').value;
+      c.package = document.getElementById('ePackage').value.trim();
+      c.duration = parseInt(document.getElementById('eDuration').value) || c.duration;
+      c.startDate = document.getElementById('eStartDate').value || c.startDate;
+      c.notes = document.getElementById('eNotes').value.trim();
+      c.rating = parseInt(document.getElementById('eRating').value) || 0;
+      const start = new Date(c.startDate);
+      const end = new Date(start);
+      end.setDate(end.getDate() + c.duration);
+      c.endDate = end.toISOString().split('T')[0];
+
+      saveLocal();
+      if (isOnline && getApiUrl()) {
+        const synced = await updateInSheets(c);
+        if (synced) showToast('✅ تم التحديث والمزامنة');
+        else showToast('⚠️ تم التحديث محلياً فقط');
+      } else { showToast('✅ تم التحديث محلياً'); }
+      closeModal(); renderList(); updateStats();
+    }
+
+    async function deleteCustomer(id) {
+      const c = customers.find(x => x.id === id);
+      if (!c || !canEdit(c)) { showToast('⚠️ لا يمكنك حذف هذا العميل'); return; }
+      if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) return;
+      customers = customers.filter(x => x.id !== id);
+      saveLocal();
+      if (isOnline && getApiUrl()) await deleteFromSheets(id);
+      showToast('🗑️ تم حذف العميل');
+      renderList(); updateStats();
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // UTILITIES
+    // ═══════════════════════════════════════════════════════════
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════
+    document.getElementById('cStartDate').value = new Date().toISOString().split('T')[0];
+    checkAuth();
+  </script>
+</body>
+</html>
