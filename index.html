@@ -11,6 +11,7 @@
   <title>بائع الباقات</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="apple-touch-icon" href="./icon-192x192.png">
+  <script src="./config.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
@@ -25,7 +26,6 @@
     }
     .app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; }
 
-    /* Login Screen */
     .login-screen {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
       padding: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
@@ -47,8 +47,8 @@
     .login-box .form-group input:focus { outline: none; border-color: var(--primary); background: #fff; }
     .login-box .btn { margin-top: 8px; }
     .login-error { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 18px; }
+    .login-debug { color: #999; font-size: 10px; margin-top: 8px; word-break: break-all; }
 
-    /* Header */
     .header {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
       color: white; padding: 14px 18px 22px; text-align: center;
@@ -73,7 +73,6 @@
     .sync-badge.offline { background: rgba(214,48,49,0.3); }
     .sync-badge.syncing { background: rgba(253,203,110,0.4); color: #2d3436; }
 
-    /* Bottom Nav */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: white; display: flex; justify-content: space-around;
@@ -90,20 +89,17 @@
     .nav-btn.active { color: var(--primary); }
     .nav-btn:active { transform: scale(0.95); }
 
-    /* Content */
     .content { padding: 14px 14px 90px; }
     .screen { display: none; animation: fadeIn 0.25s ease-out; }
     .screen.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Cards */
     .card {
       background: var(--card); border-radius: 16px; padding: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 12px;
     }
     .card-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
-    /* Form */
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 6px; }
     .form-group input, .form-group select, .form-group textarea {
@@ -117,13 +113,11 @@
     }
     .form-group textarea { min-height: 70px; resize: vertical; }
 
-    /* Star Rating */
     .stars { display: flex; gap: 6px; direction: ltr; justify-content: flex-end; }
     .star { font-size: 26px; cursor: pointer; color: #dfe6e9; transition: all 0.15s; user-select: none; }
     .star.active { color: #fdcb6e; text-shadow: 0 0 8px rgba(253,203,110,0.4); }
     .star:active { transform: scale(1.2); }
 
-    /* Buttons */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
       padding: 12px 20px; border: none; border-radius: 12px; font-size: 14px;
@@ -137,7 +131,6 @@
     .btn-outline { background: transparent; border: 2px solid #e8e8e8; color: var(--text-light); }
     .btn-sm { padding: 8px 12px; font-size: 12px; width: auto; }
 
-    /* Filter Tabs */
     .filter-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
     .filter-tab {
       flex: 1; padding: 10px; border: 2px solid #e8e8e8; border-radius: 12px;
@@ -148,18 +141,15 @@
     .filter-tab.active { border-color: var(--primary); color: var(--primary); background: #f0f7ff; }
     .filter-tab:active { transform: scale(0.97); }
 
-    /* GPS Status */
     .gps-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-light); margin-bottom: 14px; padding: 10px 14px; background: #f8f9fa; border-radius: 10px; }
     .gps-status.ok { color: var(--success); background: #e8f8f5; }
     .gps-status.err { color: var(--danger); background: #ffeaea; }
 
-    /* Search */
     .search-box { position: relative; margin-bottom: 12px; }
     .search-box input { width: 100%; padding: 12px 14px 12px 40px; border: 2px solid #e8e8e8; border-radius: 12px; font-size: 14px; background: #fafafa; }
     .search-box input:focus { outline: none; border-color: var(--primary); background: #fff; }
     .search-box .icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #b2bec3; }
 
-    /* Customer Card */
     .customer-card {
       background: var(--card); border-radius: 16px; padding: 14px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 10px;
@@ -190,7 +180,6 @@
     .customer-card .actions { display: flex; gap: 6px; margin-top: 10px; }
     .customer-card .rating { font-size: 14px; letter-spacing: 1px; }
 
-    /* Stats Bar */
     .stats-bar { display: flex; gap: 8px; margin-bottom: 12px; }
     .stat-pill {
       flex: 1; background: var(--card); border-radius: 12px; padding: 10px;
@@ -199,12 +188,10 @@
     .stat-pill .num { font-size: 18px; font-weight: 700; color: var(--primary); }
     .stat-pill .label { font-size: 10px; color: var(--text-light); margin-top: 2px; }
 
-    /* Empty State */
     .empty { text-align: center; padding: 40px 20px; color: var(--text-light); }
     .empty .icon { font-size: 48px; margin-bottom: 12px; }
     .empty p { font-size: 14px; }
 
-    /* Toast */
     .toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
       background: #2d3436; color: white; padding: 12px 24px; border-radius: 12px;
@@ -213,7 +200,6 @@
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
-    /* Modal */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.5);
       display: none; align-items: center; justify-content: center; z-index: 150;
@@ -228,12 +214,6 @@
     .modal h3 { font-size: 17px; margin-bottom: 16px; }
     .modal .actions { display: flex; gap: 10px; margin-top: 20px; }
 
-    /* API Config */
-    .api-config { background: #fff8e1; border: 1px solid #ffeaa7; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-    .api-config label { font-size: 12px; font-weight: 600; color: #856404; display: block; margin-bottom: 6px; }
-    .api-config input { width: 100%; padding: 10px 12px; border: 2px solid #ffeaa7; border-radius: 10px; font-size: 12px; }
-    .api-config input:focus { outline: none; border-color: #fdcb6e; }
-
     @media (max-width: 480px) { .header h1 { font-size: 16px; } .content { padding: 10px 10px 90px; } }
   </style>
 </head>
@@ -245,10 +225,6 @@
         <div class="logo">📶</div>
         <h2>بائع الباقات</h2>
         <p>تسجيل الدخول للمتابعة</p>
-        <div class="api-config" style="margin-bottom:16px;text-align:right;">
-          <label>🔗 رابط Google Sheets API</label>
-          <input type="text" id="loginApiUrl" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveApiUrl()">
-        </div>
         <div class="form-group">
           <label>اسم المستخدم</label>
           <input type="text" id="loginUser" placeholder="مثال: admin" autocomplete="username">
@@ -259,12 +235,12 @@
         </div>
         <button class="btn btn-primary" onclick="doLogin()">🔐 تسجيل الدخول</button>
         <div class="login-error" id="loginError"></div>
+        <div class="login-debug" id="loginDebug"></div>
       </div>
     </div>
 
-    <!-- MAIN APP (hidden until login) -->
+    <!-- MAIN APP -->
     <div id="mainApp" style="display:none;">
-      <!-- Header -->
       <div class="header">
         <div class="user-badge" onclick="logout()">
           <span>👤</span>
@@ -278,9 +254,8 @@
         <p id="userRole">بائع متجول</p>
       </div>
 
-      <!-- Content Screens -->
       <div class="content">
-        <!-- Screen 1: Add Customer -->
+        <!-- Screen 1: Add -->
         <div id="screen-add" class="screen active">
           <div class="card">
             <div class="card-title">📝 تسجيل عميل جديد</div>
@@ -351,7 +326,7 @@
           </div>
         </div>
 
-        <!-- Screen 2: Customer List -->
+        <!-- Screen 2: List -->
         <div id="screen-list" class="screen">
           <div class="stats-bar">
             <div class="stat-pill"><div class="num" id="statTotal">0</div><div class="label">العملاء</div></div>
@@ -379,7 +354,6 @@
         </div>
       </div>
 
-      <!-- Bottom Nav -->
       <div class="bottom-nav">
         <button class="nav-btn active" onclick="switchScreen('add')">
           <span class="icon">➕</span>
@@ -396,10 +370,8 @@
       </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
 
-    <!-- Edit Modal -->
     <div class="modal-overlay" id="editModal">
       <div class="modal">
         <h3>✏️ تعديل بيانات العميل</h3>
@@ -462,10 +434,9 @@
 
   <script>
     // ═══════════════════════════════════════════════════════════
-    // CONFIG
+    // CONFIG - from config.js file (manager sets this ONCE)
     // ═══════════════════════════════════════════════════════════
     const STORAGE_KEY = 'netSeller_customers';
-    const API_URL_KEY = 'netSeller_apiUrl';
     const USER_KEY = 'netSeller_user';
     let customers = [];
     let currentRating = 0;
@@ -473,15 +444,15 @@
     let isOnline = navigator.onLine;
     let isSyncing = false;
     let currentUser = null;
-    let listFilter = 'mine'; // 'mine' or 'all'
+    let listFilter = 'mine';
 
-    // ═══════════════════════════════════════════════════════════
-    // API URL
-    // ═══════════════════════════════════════════════════════════
-    function getApiUrl() { return localStorage.getItem(API_URL_KEY) || ''; }
-    function saveApiUrl() {
-      const url = (document.getElementById('loginApiUrl') || document.getElementById('apiUrlInput')).value.trim();
-      if (url) localStorage.setItem(API_URL_KEY, url);
+    // API URL comes from config.js (CONFIG_API_URL) or falls back to empty
+    function getApiUrl() {
+      // CONFIG_API_URL is defined in config.js
+      if (typeof CONFIG_API_URL !== 'undefined' && CONFIG_API_URL && CONFIG_API_URL.trim() !== '') {
+        return CONFIG_API_URL.trim();
+      }
+      return '';
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -489,26 +460,26 @@
     // ═══════════════════════════════════════════════════════════
     function checkAuth() {
       const saved = localStorage.getItem(USER_KEY);
-      const savedUrl = getApiUrl();
+      const apiUrl = getApiUrl();
+
+      if (!apiUrl) {
+        document.getElementById('loginError').textContent = '⚠️ المدير لم يضبط رابط الاتصال بعد (config.js)';
+        document.getElementById('loginDebug').textContent = 'يرجى مراجعة المدير';
+        showLoginScreen();
+        return;
+      }
+
       if (saved) {
         currentUser = JSON.parse(saved);
         showMainApp();
       } else {
         showLoginScreen();
       }
-      // Hide API URL box if already saved
-      if (savedUrl && document.getElementById('loginApiUrl')) {
-        document.getElementById('loginApiUrl').value = savedUrl;
-        // Optional: hide the box if URL exists
-        // document.getElementById('loginApiUrl').parentElement.style.display = 'none';
-      }
     }
 
     function showLoginScreen() {
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('mainApp').style.display = 'none';
-      const savedUrl = getApiUrl();
-      if (savedUrl) document.getElementById('loginApiUrl').value = savedUrl;
     }
 
     function showMainApp() {
@@ -516,7 +487,6 @@
       document.getElementById('mainApp').style.display = 'block';
       document.getElementById('userName').textContent = currentUser.name || currentUser.username;
       document.getElementById('userRole').textContent = currentUser.role === 'admin' ? 'مدير النظام' : 'بائع متجول';
-      // Admin sees all filter, seller sees only mine
       if (currentUser.role !== 'admin') {
         document.getElementById('filterTabs').style.display = 'none';
         listFilter = 'mine';
@@ -534,11 +504,14 @@
       const password = document.getElementById('loginPass').value;
       const url = getApiUrl();
       const errEl = document.getElementById('loginError');
+      const debugEl = document.getElementById('loginDebug');
 
-      if (!url) { errEl.textContent = '⚠️ أدخل رابط API أولاً'; return; }
+      if (!url) { errEl.textContent = '⚠️ رابط API غير مضبوط'; return; }
       if (!username || !password) { errEl.textContent = '⚠️ أدخل اسم المستخدم وكلمة المرور'; return; }
 
       errEl.textContent = '⏳ جاري تسجيل الدخول...';
+      debugEl.textContent = '';
+
       try {
         const loginUrl = url + '?action=login&username=' + encodeURIComponent(username) + '&password=' + encodeURIComponent(password);
         const res = await fetch(loginUrl, { method: 'GET' });
@@ -547,13 +520,15 @@
           currentUser = data.user;
           localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
           errEl.textContent = '';
+          debugEl.textContent = '';
           showMainApp();
           showToast('✅ مرحباً ' + currentUser.name);
         } else {
           errEl.textContent = '❌ ' + (data.error || 'بيانات غير صحيحة');
         }
       } catch (e) {
-        errEl.textContent = '❌ تعذر الاتصال - تأكد من الرابط والإنترنت';
+        errEl.textContent = '❌ تعذر الاتصال';
+        debugEl.textContent = 'تفاصيل: ' + e.message;
       }
     }
 
@@ -583,19 +558,6 @@
     // ═══════════════════════════════════════════════════════════
     // API
     // ═══════════════════════════════════════════════════════════
-    async function apiRequest(action, data) {
-      const url = getApiUrl();
-      if (!url) return { success: false, error: 'No API URL' };
-      try {
-        let fullUrl = url + '?action=' + encodeURIComponent(action);
-        if (data) {
-          fullUrl += '&data=' + encodeURIComponent(JSON.stringify(data));
-        }
-        const response = await fetch(fullUrl, { method: 'GET' });
-        return await response.json();
-      } catch (e) { return { success: false, error: e.message }; }
-    }
-
     async function syncFromSheets() {
       const url = getApiUrl();
       if (!url || !isOnline || !currentUser) return;
@@ -606,41 +568,52 @@
           : url + '?action=getBySeller&sellerId=' + encodeURIComponent(currentUser.id);
         const res = await fetch(endpoint, { method: 'GET' });
         const data = await res.json();
-        if (data.success && data.data) {
+        if (data.success && Array.isArray(data.data)) {
           customers = data.data;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(customers));
           renderList(); updateStats(); renderReminders();
+          showToast('✅ تم تحديث البيانات (' + customers.length + ' عميل)');
+        } else {
+          showToast('⚠️ ' + (data.error || 'خطأ في البيانات'));
         }
-      } catch (e) { console.log('Sync failed:', e); }
+      } catch (e) { console.log('Sync failed:', e); showToast('⚠️ فشل التحديث'); }
       isSyncing = false; updateSyncBadge();
     }
 
     async function addToSheets(customer) {
       if (!isOnline) return false;
       isSyncing = true; updateSyncBadge();
-      const res = await apiRequest('add', customer);
-      isSyncing = false; updateSyncBadge();
-      return res.success;
+      try {
+        const url = getApiUrl() + '?action=add&data=' + encodeURIComponent(JSON.stringify(customer));
+        const res = await fetch(url, { method: 'GET' });
+        const data = await res.json();
+        isSyncing = false; updateSyncBadge();
+        return data.success;
+      } catch (e) { isSyncing = false; updateSyncBadge(); return false; }
     }
+
     async function updateInSheets(customer) {
       if (!isOnline) return false;
       isSyncing = true; updateSyncBadge();
-      const res = await apiRequest('update', customer);
-      isSyncing = false; updateSyncBadge();
-      return res.success;
+      try {
+        const url = getApiUrl() + '?action=update&data=' + encodeURIComponent(JSON.stringify(customer));
+        const res = await fetch(url, { method: 'GET' });
+        const data = await res.json();
+        isSyncing = false; updateSyncBadge();
+        return data.success;
+      } catch (e) { isSyncing = false; updateSyncBadge(); return false; }
     }
+
     async function deleteFromSheets(id) {
       if (!isOnline) return false;
       isSyncing = true; updateSyncBadge();
-      const url = getApiUrl() + '?action=delete&id=' + encodeURIComponent(id);
       try {
-        const res = await fetch(url).then(r => r.json());
+        const url = getApiUrl() + '?action=delete&id=' + encodeURIComponent(id);
+        const res = await fetch(url, { method: 'GET' });
+        const data = await res.json();
         isSyncing = false; updateSyncBadge();
-        return res.success;
-      } catch (e) {
-        isSyncing = false; updateSyncBadge();
-        return false;
-      }
+        return data.success;
+      } catch (e) { isSyncing = false; updateSyncBadge(); return false; }
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -794,17 +767,16 @@
       const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
       let list = customers;
-      // Filter by seller if not admin and filter is 'mine'
       if (currentUser && currentUser.role !== 'admin' && listFilter === 'mine') {
         list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
       }
 
       if (query) {
         list = list.filter(c =>
-          (c.name && c.name.toLowerCase().includes(query)) ||
-          (c.phone && c.phone.includes(query)) ||
-          (c.company && c.company.toLowerCase().includes(query)) ||
-          (c.package && c.package.toLowerCase().includes(query))
+          (c.name && String(c.name).toLowerCase().includes(query)) ||
+          (c.phone && String(c.phone).includes(query)) ||
+          (c.company && String(c.company).toLowerCase().includes(query)) ||
+          (c.package && String(c.package).toLowerCase().includes(query))
         );
       }
 
@@ -821,8 +793,8 @@
         else if (dl <= 5) { borderClass = 'expiring-soon'; daysBadge = '<span class="badge days-left">' + dl + ' يوم</span>'; }
         else if (dl <= 10) { borderClass = 'expiring-warning'; daysBadge = '<span class="badge days-warning">' + dl + ' يوم</span>'; }
         else { daysBadge = '<span class="badge days-ok">' + dl + ' يوم</span>'; }
-        const companyClass = 'company-' + (c.company || '').toLowerCase();
-        const cleanPhone = c.phone ? c.phone.replace(/\s/g,'').replace(/-/g,'') : '';
+        const companyClass = 'company-' + String(c.company || '').toLowerCase();
+        const cleanPhone = c.phone ? String(c.phone).replace(/\s/g,'').replace(/-/g,'') : '';
         const waPhone = cleanPhone.startsWith('0') ? '966' + cleanPhone.substring(1) : cleanPhone;
         const sellerTag = c.sellerName ? '<span class="seller-tag">👤 ' + escapeHtml(c.sellerName) + '</span>' : '';
 
@@ -866,7 +838,6 @@
     function renderReminders() {
       const container = document.getElementById('reminderList');
       let list = customers.filter(c => daysLeft(c.endDate) <= 5).sort((a, b) => daysLeft(a.endDate) - daysLeft(b.endDate));
-      // Filter by seller if not admin
       if (currentUser && currentUser.role !== 'admin') {
         list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
       }
@@ -878,8 +849,8 @@
         const dl = daysLeft(c.endDate);
         let statusText = dl <= 0 ? '⛔ انتهت!' : '⏰ تنتهي خلال ' + dl + ' يوم';
         let urgency = dl <= 0 ? 'expiring-soon' : (dl <= 2 ? 'expiring-soon' : 'expiring-warning');
-        const companyClass = 'company-' + (c.company || '').toLowerCase();
-        const cleanPhone = c.phone ? c.phone.replace(/\s/g,'').replace(/-/g,'') : '';
+        const companyClass = 'company-' + String(c.company || '').toLowerCase();
+        const cleanPhone = c.phone ? String(c.phone).replace(/\s/g,'').replace(/-/g,'') : '';
         const waPhone = cleanPhone.startsWith('0') ? '966' + cleanPhone.substring(1) : cleanPhone;
         const sellerTag = c.sellerName ? '<span class="seller-tag">👤 ' + escapeHtml(c.sellerName) + '</span>' : '';
 
