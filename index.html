@@ -339,7 +339,7 @@
           </div>
           <div class="search-box">
             <span class="icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="ابحث بالاسم، الجوال، الشركة..." oninput="renderList()">
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم، الجوال، الشركة، أو اسم البائع..." oninput="renderList()">
           </div>
           <div id="customerList"></div>
         </div>
@@ -744,14 +744,37 @@
     // ═══════════════════════════════════════════════════════════
     // DATE HELPERS
     // ═══════════════════════════════════════════════════════════
-    function daysLeft(endDateStr) {
-      const end = new Date(endDateStr + 'T00:00:00');
+    function toDateString(val) {
+      // Handle Date objects from Google Sheets (which come as JS Date strings or objects)
+      if (!val) return '';
+      if (val instanceof Date) return val.toISOString().split('T')[0];
+      if (typeof val === 'string') {
+        // Already a date string like "2026-08-27" or "8/27/2026"
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+      }
+      // Try converting number (Excel date serial)
+      if (typeof val === 'number') {
+        const d = new Date((val - 25569) * 86400 * 1000);
+        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+      }
+      return String(val);
+    }
+    function daysLeft(endDateVal) {
+      const dateStr = toDateString(endDateVal);
+      if (!dateStr) return 999;
+      const end = new Date(dateStr + 'T00:00:00');
+      if (isNaN(end.getTime())) return 999;
       const now = new Date(); now.setHours(0,0,0,0);
       return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
     }
-    function formatDate(dateStr) {
+    function formatDate(dateVal) {
+      const dateStr = toDateString(dateVal);
       if (!dateStr) return '-';
-      return new Date(dateStr + 'T00:00:00').toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric' });
+      const d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return '-';
+      return d.toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric' });
     }
     function starsHtml(rating) {
       let s = '';
@@ -767,7 +790,8 @@
       const query = document.getElementById('searchInput').value.trim().toLowerCase();
 
       let list = customers;
-      if (currentUser && currentUser.role !== 'admin' && listFilter === 'mine') {
+      // When "mine" filter is selected, show only current user's customers (works for admin too)
+      if (listFilter === 'mine' && currentUser) {
         list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
       }
 
@@ -776,7 +800,8 @@
           (c.name && String(c.name).toLowerCase().includes(query)) ||
           (c.phone && String(c.phone).includes(query)) ||
           (c.company && String(c.company).toLowerCase().includes(query)) ||
-          (c.package && String(c.package).toLowerCase().includes(query))
+          (c.package && String(c.package).toLowerCase().includes(query)) ||
+          (c.sellerName && String(c.sellerName).toLowerCase().includes(query))
         );
       }
 
@@ -883,7 +908,8 @@
     // ═══════════════════════════════════════════════════════════
     function updateStats() {
       let list = customers;
-      if (currentUser && currentUser.role !== 'admin' && listFilter === 'mine') {
+      // When "mine" filter is selected, show only current user's customers (works for admin too)
+      if (listFilter === 'mine' && currentUser) {
         list = list.filter(c => String(c.sellerId || '') === String(currentUser.id));
       }
       document.getElementById('statTotal').textContent = list.length;
